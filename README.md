@@ -13,7 +13,7 @@ Although the program was intended for SNES ROMs, output patches should work
 with any ROM file that has a fixed size 512 byte wide header.
 
 **It is not recomended to directly patch your ROMs because broken patches may
-damage your ROM. Please use an emulator or ROM loading tool that has bult-in
+damage your ROM. Please use an emulator or ROM loading tool that has built-in
 IPS patch loading support.**
 
 Compiling
