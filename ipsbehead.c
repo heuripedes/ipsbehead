@@ -111,7 +111,7 @@ int main (int argc, char* argv[]) {
 	int chunkno = 0;
 
 	if (argc < 3) {
-		printf("usage: %s <input.sfc> <output.sfc>\n", argv[0]);
+		printf("usage: %s <input.ips> <output.ips>\n", argv[0]);
 		exit(EXIT_SUCCESS);
 	}
 
