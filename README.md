@@ -19,12 +19,20 @@ IPS patch loading support.**
 Compiling
 ---------
 
-To compile ipsbehead just run `make` in the source directory. ipsbehead does
-not depend on any third party libraries and is known to compile under gcc and
-clang. Microsoft compilers have not been tested.
+ipsbehead does not depend on any third party libraries and is known to compile
+under gcc and clang. Microsoft compilers have not been tested.
+
+* To compile under **windows**, make sure you have Mingw or Mingw-w64 installed, go
+  to ipsbehead directory and type `make win`. An executable called
+  ipsbehead.exe will be created.
+
+* To compile under **unix**es, make sure you have the development packages
+  installed (build-essential, XCode, base-devel or whatever it is called in
+  your system) and run `make unix` in the ipsbehead directory.
 
 Usage
 -----
 
 	./ipsbehead input.ips output.ips
+	./ipsbehead.exe input.ips output.ips
 

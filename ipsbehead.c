@@ -3,7 +3,13 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <arpa/inet.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+#  include <winsock2.h>
+#else
+#  include <arpa/inet.h>
+#endif
+
 #include <errno.h>
 
 struct ips_record {
