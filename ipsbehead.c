@@ -86,16 +86,22 @@ static int read_record(FILE* fp, struct ips_record *rec) {
 }
 
 static void behead(struct ips_record *in, struct ips_record *out) {
+	int skip = 0;
 	/* fix offsets & truncate record data */
 	out->off = in->off;
 	out->len = in->len;
 	out->is_rle = in->is_rle;
 
 	if (in->off < 0x200) {
-		out->off = 0x200 - in->off;
-		out->len -= out->off;
-
 		out->off = 0;
+		out->len -= in->off;
+
+		/* skip node if ends before 0x200 or overflow happened */
+		if (out->off + out->len < 0x200 || out->len > in->len)
+			out->len = 0;
+
+		skip = in->len - out->len;
+
 	} else {
 		out->off = in->off - 0x200;
 	}
@@ -104,7 +110,7 @@ static void behead(struct ips_record *in, struct ips_record *out) {
 		if (out->is_rle)
 			out->data[0] = in->data[0];
 		else
-			memcpy(out->data, in->data, out->len);
+			memcpy(out->data, in->data + skip, out->len - skip);
 	}
 }
 
@@ -145,8 +151,8 @@ int main (int argc, char* argv[]) {
 
 		printf("%5i | %06x - %06x | %06x - %06x | %s\n",
 				chunkno,
-				in.off, in.off + in.len-1,
-				out.off, out.off + out.len-1,
+				in.off, (in.len ? (in.off + in.len-1) : in.off),
+				out.off, (out.len ? (out.off + out.len-1) : out.off),
 				(in.is_rle) ? "Y" : "N");
 		chunkno++;
 	}
