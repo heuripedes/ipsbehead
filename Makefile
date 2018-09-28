@@ -8,9 +8,9 @@ win: ipsbehead.exe
 clean:
 	-rm -f ipsbehead ipsbehead.exe ipsbehead.o
 
-ipsbehead: ipsbehead.c
+ipsbehead: ipsbehead.c Makefile
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< 
 
-ipsbehead.exe: ipsbehead.c
+ipsbehead.exe: ipsbehead.c Makefile
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lws2_32
 
