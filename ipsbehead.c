@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <assert.h>
 
 #if defined(_WIN32) || defined(_WIN64)
 #  include <winsock2.h>
@@ -86,33 +87,84 @@ static int read_record(FILE* fp, struct ips_record *rec) {
 }
 
 static void behead(struct ips_record *in, struct ips_record *out) {
-	int skip = 0;
-	/* fix offsets & truncate record data */
-	out->off = in->off;
+	size_t skip = 0;
+	ssize_t new_off = (ssize_t)in->off - 0x200;
+
+	out->off = new_off;
 	out->len = in->len;
 	out->is_rle = in->is_rle;
 
-	if (in->off < 0x200) {
+	if (new_off < 0) { /* record starts in the header */
 		out->off = 0;
-		out->len -= in->off;
+		out->len = in->len + new_off;
+		skip = -new_off;
 
-		/* skip node if ends before 0x200 or overflow happened */
-		if (out->off + out->len < 0x200 || out->len > in->len)
+		if (out->len > in->len) {
 			out->len = 0;
-
-		skip = in->len - out->len;
-
-	} else {
-		out->off = in->off - 0x200;
+			return;
+		}
 	}
 
 	if (out->len) {
 		if (out->is_rle)
 			out->data[0] = in->data[0];
 		else
-			memcpy(out->data, in->data + skip, out->len - skip);
+			memcpy(out->data, &in->data[skip], out->len);
+
 	}
 }
+
+#if 0
+static void randomize_record_data(struct ips_record *r) {
+	size_t i;
+
+	for (i = 0; i < sizeof(r->data); i += sizeof(int32_t)) {
+		*(int32_t*)&r->data[i] = rand();
+	}
+}
+
+static void run_tests() {
+	/* Usecase 1: Input record doesn't touch the header. */
+	{
+		struct ips_record in = { 0x200, 16 };
+		struct ips_record out = { 0 };
+		randomize_record_data(&in);
+
+		behead(&in, &out);
+
+		assert(out.off == (in.off - 0x200));
+		assert(out.len == in.len);
+		assert(out.is_rle == in.is_rle);
+		assert(memcmp(in.data, out.data, in.is_rle ? 1 : in.len) == 0);
+	}
+
+	/* Usecase 2: Input record modifies only the header. */
+	{
+		struct ips_record in = { 0x20, 1, 0 };
+		struct ips_record out = { 0 };
+		randomize_record_data(&in);
+
+		behead(&in, &out);
+
+		assert(out.len == 0);
+		assert(out.is_rle == in.is_rle);
+	}
+
+	/* Usecase 3: Input record modifies both the header and the body. */
+	{
+		struct ips_record in = { 0x200-8, 16, 0 };
+		struct ips_record out = { 0 };
+		randomize_record_data(&in);
+
+		behead(&in, &out);
+
+		assert(out.off == 0);
+		assert(out.len == 8);
+		assert(out.is_rle == in.is_rle);
+		assert(memcmp(&in.data[8], out.data, out.len) == 0);
+	}
+}
+#endif
 
 int main (int argc, char* argv[]) {
 	FILE *ifp = NULL;
